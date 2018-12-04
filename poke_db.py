@@ -13,9 +13,10 @@ from bs4 import BeautifulSoup
 conn = sqlite3.connect('pokemon_database')
 cur = conn.cursor()
 
-#Creating 5 tables - Regions (Kanto, Johto, Hoenn)
+#Creating 6 tables - Regions (Kanto, Johto, Hoenn)
 #Pokemon (9 starter pokemon, 3 from each region)
 #Types (the 3 starter types - plant, fire, water)
+#TypeStrength
 #Moves (id, move, attack/defense, type, score)
 #Poke-Move (Id, pokemon id, move id)
 
@@ -29,12 +30,17 @@ statement = '''
 cur.execute(statement)
 
 statement = '''
-    DROP TABLE IF EXISTS 'Pokemon';
+    DROP TABLE IF EXISTS 'Pokemons';
 '''
 cur.execute(statement)
 
 statement = '''
-    DROP TABLE IF EXISTS 'Type';
+    DROP TABLE IF EXISTS 'Types';
+'''
+cur.execute(statement)
+
+statement = '''
+    DROP TABLE IF EXISTS 'TypeStength';
 '''
 cur.execute(statement)
 
@@ -64,11 +70,21 @@ conn.commit()
 
 #creating the table 'Type', column names type id, type, strong against, weak against
 statement = '''
-    CREATE TABLE 'Type' (
+    CREATE TABLE 'Types' (
+        'Id' INTEGER PRIMARY KEY AUTOINCREMENT,
+        'Type' TEXT NOT NULL
+    );
+'''
+cur.execute(statement)
+conn.commit()
+
+#creating the table 'TypeStrength', column names id, type, strong against, weak against
+statement = '''
+    CREATE TABLE 'TypeStrength' (
         'Id' INTEGER PRIMARY KEY AUTOINCREMENT,
         'Type' TEXT NOT NULL,
-        'Strong Against' TEXT NOT NULL,
-        'Weak Against' TEXT NOT NULL
+        'StrongAgainst' INTEGER,
+        'WeakAgainst' INTEGER
     );
 '''
 cur.execute(statement)
@@ -76,11 +92,11 @@ conn.commit()
 
 #creating the table 'Pokemon', column names id, Pokemon name, region id, type id
 statement = '''
-    CREATE TABLE 'Pokemon' (
+    CREATE TABLE 'Pokemons' (
         'Id' INTEGER PRIMARY KEY AUTOINCREMENT,
         'Pokemon' TEXT NOT NULL,
-        'Type Id' INTEGER NOT NULL,
-        'Region Id' INTEGER NOT NULL
+        'TypeId' INTEGER,
+        'RegionId' INTEGER NOT NULL
     );
 '''
 cur.execute(statement)
@@ -90,8 +106,8 @@ conn.commit()
 statement = '''
     CREATE TABLE 'Moves' (
         'Id' INTEGER PRIMARY KEY AUTOINCREMENT,
-        'Move name' TEXT NOT NULL,
-        'Type Id' INTEGER NOT NULL
+        'MoveName' TEXT NOT NULL,
+        'TypeId' INTEGER NOT NULL
     );
 '''
 cur.execute(statement)
@@ -101,32 +117,35 @@ conn.commit()
 statement = '''
     CREATE TABLE 'Poke-Move' (
         'Id' INTEGER PRIMARY KEY AUTOINCREMENT,
-        'Pokemon Id' INTEGER NOT NULL,
-        'Move Id' INTEGER NOT NULL
+        'PokemonId' INTEGER NOT NULL,
+        'MoveId' INTEGER NOT NULL
     );
 '''
 cur.execute(statement)
 conn.commit()
 
 # =============================================================================
-# Populating the tables
+# Scraping the data
 # =============================================================================
 
 baseurl = 'http://pokemon.wikia.com'
+names_list = []
+urls_list = [] 
+hoenn_names = []
+hoenn_urls = []
+name_regions = []
 
 def get_regions_data():
     regions_extension = '/wiki/Category:Region_Starters'
     main_regions_page = requests.get(baseurl+regions_extension).text
-    main_regions_soup = BeautifulSoup(main_regions_page, 'html.parser')
-    names_list = []
-    urls_list = []    
+    main_regions_soup = BeautifulSoup(main_regions_page, 'html.parser')   
     regions_section = main_regions_soup.find_all("li", {"class": "category-page__trending-page"})
     for region in regions_section:
         regions_url = region.find('a')['href'] #gets extensions for individual region's url
         regions_title = region.find("figcaption", {"class": "category-page__trending-page-title"}).text
         #gets the text of each section, but it includes "starter pokemon"
         regions_name = regions_title.split(' ')[0] #split string by space and display just first element i.e. the name
-       
+        name_regions.append(regions_name)
         if regions_name == 'Johto' or regions_name == 'Kanto': #these 2 regions have pokemons in tables
             regions_page = requests.get(baseurl+regions_url).text
             regions_soup = BeautifulSoup(regions_page, 'html.parser')
@@ -144,11 +163,11 @@ def get_regions_data():
             regions_soup = BeautifulSoup(regions_page, 'html.parser')
             pokemon_para = regions_soup.find("div", {"id":"mw-content-text"}).find_all('p')[1]
             pokemon_names = pokemon_para.find_all('a')
-            hoenn_names = []
-            hoenn_urls = []
             for pokemon in pokemon_names:
                 hoenn_names.append(pokemon.text)
+                hoenn_urls.append(pokemon['href'])
             hoenn_names.remove('Hoenn Region')
+            hoenn_urls.remove('/wiki/Hoenn')
         else: #coding just for Hoenn region as per the proposal, rather than for all other regions.
             #all other regions have it in text paragraph
             #how to get regions from those?
@@ -160,12 +179,98 @@ def get_regions_data():
 #                for pokemon in pokemon_names:
 #                    names_list.append(pokemon.text)
 #                print (names_list[1], names_list[4], names_list[6])
-            pass    
-    johto_names = names_list[:3]
-    johto_urls = urls_list[:3]
-    kanto_names = names_list[3:]
-    kanto_urls = urls_list[3:]
+            pass
+        
+        
+get_regions_data()        
+johto_names = names_list[:3]
+johto_urls = urls_list[:3]
+kanto_names = names_list[3:]
+kanto_urls = urls_list[3:]
+urls_list.extend(hoenn_urls)
 
-get_regions_data()
+types_list = []
+def get_types():
+    types_page = requests.get(baseurl+'/Types').text
+    types_soup = BeautifulSoup(types_page, 'html.parser')
+    if types_soup.find("table", {"class":"article-table"}).find_all("span", {"class":"t-type2"}) != None:
+        all_types_list = types_soup.find("table", {"class":"article-table"}).find_all("span", {"class":"t-type2"})
+
+    for row in all_types_list:
+        types_list.append(row.text)
+
+get_types()
+#print(types_list)
+
+pokemon_name_type_dict = {}
+def get_pokemons_data():
+    for url in urls_list:
+        pokemon_page = requests.get(baseurl+url).text
+        pokemon_soup = BeautifulSoup(pokemon_page, 'html.parser')
+        pokemon_type = pokemon_soup.find("span", {"class":"t-type2"}).text
+        pokemon_name = url.split('/')[-1]
+        pokemon_name_type_dict[pokemon_name] = pokemon_type
+get_pokemons_data()
+
+
+def get_moves_data():
+    moves_page = requests.get(baseurl+'/List_of_moves').text
+    moves_soup = BeautifulSoup(moves_page, 'html.parser')
+    moves_table = moves_soup.find_all("table", {"class":"sortable list wikitable jquery-tablesorter"})
+    print(len(moves_table))
+    for row in moves_table:
+        print(row, '\n\n')
+get_moves_data()
+
+# =============================================================================
+# Populating the tables
+# =============================================================================
+
+#Populating 'Regions' Table
+for name in name_regions:
+    name = (name,)
+    statement = "INSERT INTO \"Regions\" (Region) VALUES (?)"
+    cur.execute(statement, name)
+    conn.commit()
+
+#Populating 'Pokemons' Table
+for name in johto_names:
+    Id = 2
+    statement = "INSERT INTO \"Pokemons\" (Pokemon, RegionId) VALUES (?, ?)"
+    cur.execute(statement, (name, Id))
+    conn.commit()
+
+for name in kanto_names:
+    Id = 4
+    statement = "INSERT INTO \"Pokemons\" (Pokemon, RegionId) VALUES (?, ?)"
+    cur.execute(statement, (name, Id))
+    conn.commit()
+
+for name in hoenn_names:
+    Id = 6
+    statement = "INSERT INTO \"Pokemons\" (Pokemon, RegionId) VALUES (?, ?)"
+    cur.execute(statement, (name, Id))
+    conn.commit()
+
+#Populating 'Types' Table
+for poke_type in types_list:
+    statement = "INSERT INTO \"Types\" (Type) VALUES (?)"
+    poke_type = (poke_type,)
+    cur.execute(statement, poke_type)
+    conn.commit()
+    
+for key in pokemon_name_type_dict: #populate TypeId in Pokemons table
+    type_name = pokemon_name_type_dict[key]
+    statement = "SELECT Id FROM Types WHERE Type = ?"
+    cur.execute(statement, (type_name,))
+    type_id = cur.fetchone()
+    conn.commit()
+    #insert into table
+    statement = "UPDATE \"Pokemons\" SET TypeId = ? WHERE Pokemon = ?"
+    cur.execute(statement, (type_id[0], key,))
+    conn.commit()
+
+#Populating table 'TypeStrength'
+
 
 conn.close()
