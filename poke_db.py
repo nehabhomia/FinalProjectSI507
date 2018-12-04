@@ -40,7 +40,7 @@ statement = '''
 cur.execute(statement)
 
 statement = '''
-    DROP TABLE IF EXISTS 'TypeStength';
+    DROP TABLE IF EXISTS 'TypeStrength';
 '''
 cur.execute(statement)
 
@@ -107,7 +107,7 @@ statement = '''
     CREATE TABLE 'Moves' (
         'Id' INTEGER PRIMARY KEY AUTOINCREMENT,
         'MoveName' TEXT NOT NULL,
-        'TypeId' INTEGER NOT NULL
+        'TypeId' INTEGER
     );
 '''
 cur.execute(statement)
@@ -212,14 +212,17 @@ def get_pokemons_data():
         pokemon_name_type_dict[pokemon_name] = pokemon_type
 get_pokemons_data()
 
-
+move_names = []
 def get_moves_data():
     moves_page = requests.get(baseurl+'/List_of_moves').text
     moves_soup = BeautifulSoup(moves_page, 'html.parser')
-    moves_table = moves_soup.find_all("table", {"class":"sortable list wikitable jquery-tablesorter"})
-    print(len(moves_table))
-    for row in moves_table:
-        print(row, '\n\n')
+    moves_table = moves_soup.find("div", {"id":"mw-content-text"})
+    tester = moves_table.find_all('td')
+    for row in tester:
+        if row.find('a') != None:
+            name = row.find('a').text
+            if len(name) != 1 and name != '':
+                move_names.append(name)
 get_moves_data()
 
 # =============================================================================
@@ -271,6 +274,16 @@ for key in pokemon_name_type_dict: #populate TypeId in Pokemons table
     conn.commit()
 
 #Populating table 'TypeStrength'
-
+pairs = [('Fire', 'Grass', 'Water'), ('Grass', 'Water', 'Fire'), ('Water', 'Fire', 'Grass')]
+for pair in pairs:
+    statement = "INSERT INTO \"TypeStrength\" (Type, StrongAgainst, WeakAgainst) VALUES (?, ?, ?)"
+    cur.execute(statement, pair)
+    conn.commit()
+    
+#Populating table 'Moves'
+for name in move_names:
+    statement = "INSERT INTO \"Moves\" (MoveName) VALUES (?)"
+    cur.execute(statement, (name,))
+conn.commit()
 
 conn.close()
