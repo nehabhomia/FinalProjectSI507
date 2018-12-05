@@ -9,6 +9,9 @@ Created on Sun Dec  2 19:35:26 2018
 import sqlite3
 import requests
 from bs4 import BeautifulSoup
+import json
+import requests_cache
+requests_cache.install_cache('pokemon_cache')
 
 conn = sqlite3.connect('pokemon_database')
 cur = conn.cursor()
@@ -107,7 +110,8 @@ statement = '''
     CREATE TABLE 'Moves' (
         'Id' INTEGER PRIMARY KEY AUTOINCREMENT,
         'MoveName' TEXT NOT NULL,
-        'TypeId' INTEGER
+        'TypeId' INTEGER,
+        'Power' INTEGER
     );
 '''
 cur.execute(statement)
@@ -225,6 +229,34 @@ def get_moves_data():
                 move_names.append(name)
 get_moves_data()
 
+base_url = 'https://pokeapi.co/api/v2/pokemon/'
+
+def get_pokemon_moves():
+    my_pokemons = [152, 155, 158, 1, 4, 7, 252, 255, 258]
+    pokemon_moves = {}
+    for pokemon in my_pokemons:
+        pokemon_page = requests.get(base_url+str(pokemon)+'/').text
+        pokemon_dict = json.loads(pokemon_page)
+        pokemon_name = pokemon_dict['name']
+        moves_list = []
+        dict_moves_list = pokemon_dict['moves'][:10] #taking first 10 moves
+        for move in dict_moves_list:
+            move_name = move['move']['name']
+            move_url = move['move']['url']
+            move_page = requests.get(move_url).text
+            move_dict = json.loads(move_page)
+            move_type = move_dict["type"]["name"]
+            move_power = move_dict["power"]
+            if move_power == None:
+                move_power = 0
+            move_complete_dict = {"name": move_name, "type": move_type, "power": move_power}
+            moves_list.append(move_complete_dict)
+        pokemon_moves[pokemon_name] = moves_list
+        moves_list = []
+    return pokemon_moves
+
+pokemon_move_dict = get_pokemon_moves()
+
 # =============================================================================
 # Populating the tables
 # =============================================================================
@@ -281,9 +313,20 @@ for pair in pairs:
     conn.commit()
     
 #Populating table 'Moves'
-for name in move_names:
-    statement = "INSERT INTO \"Moves\" (MoveName) VALUES (?)"
-    cur.execute(statement, (name,))
-conn.commit()
+for pokemon in pokemon_move_dict:
+    pokemon_moves_list = pokemon_move_dict[pokemon]
+    for move in pokemon_moves_list:
+        # first get id of type
+        type_name = move["type"].capitalize()
+        statement = "SELECT Id FROM Types WHERE Type = ?"
+        cur.execute(statement, (type_name,))
+        type_id = cur.fetchone()
+        conn.commit()
+        # insert into table
+        move_name = move["name"]
+        move_power = move["power"]
+        statement = "INSERT INTO Moves (MoveName, TypeId, Power) VALUES (?,?,?)"
+        cur.execute(statement, (move_name, type_id[0], move_power,))
+        conn.commit()
 
 conn.close()
