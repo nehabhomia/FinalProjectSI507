@@ -21,7 +21,7 @@ cur = conn.cursor()
 #Types (the 3 starter types - plant, fire, water)
 #TypeStrength
 #Moves (id, move, attack/defense, type, score)
-#Poke-Move (Id, pokemon id, move id)
+#PokeMove (Id, pokemon id, move id)
 
 # =============================================================================
 # Dropping the tables
@@ -53,7 +53,7 @@ statement = '''
 cur.execute(statement)
 
 statement = '''
-    DROP TABLE IF EXISTS 'Poke-Move';
+    DROP TABLE IF EXISTS 'PokeMove';
 '''
 cur.execute(statement)
 
@@ -117,9 +117,9 @@ statement = '''
 cur.execute(statement)
 conn.commit()
 
-#creating the table 'Poke-Move', column names id, Pokemon id, move id
+#creating the table 'PokeMove', column names id, Pokemon id, move id
 statement = '''
-    CREATE TABLE 'Poke-Move' (
+    CREATE TABLE 'PokeMove' (
         'Id' INTEGER PRIMARY KEY AUTOINCREMENT,
         'PokemonId' INTEGER NOT NULL,
         'MoveId' INTEGER NOT NULL
@@ -231,6 +231,8 @@ get_moves_data()
 
 base_url = 'https://pokeapi.co/api/v2/pokemon/'
 
+pokemon_name_to_id = {}
+
 def get_pokemon_moves():
     my_pokemons = [152, 155, 158, 1, 4, 7, 252, 255, 258]
     pokemon_moves = {}
@@ -238,6 +240,7 @@ def get_pokemon_moves():
         pokemon_page = requests.get(base_url+str(pokemon)+'/').text
         pokemon_dict = json.loads(pokemon_page)
         pokemon_name = pokemon_dict['name']
+        pokemon_name_to_id[pokemon_name] = pokemon
         moves_list = []
         dict_moves_list = pokemon_dict['moves'][:10] #taking first 10 moves
         for move in dict_moves_list:
@@ -296,7 +299,7 @@ for poke_type in types_list:
     
 for key in pokemon_name_type_dict: #populate TypeId in Pokemons table
     type_name = pokemon_name_type_dict[key]
-    statement = "SELECT Id FROM Types WHERE Type = ?"
+    statement = "SELECT Id FROM \"Types\" WHERE Type = ?"
     cur.execute(statement, (type_name,))
     type_id = cur.fetchone()
     conn.commit()
@@ -318,7 +321,7 @@ for pokemon in pokemon_move_dict:
     for move in pokemon_moves_list:
         # first get id of type
         type_name = move["type"].capitalize()
-        statement = "SELECT Id FROM Types WHERE Type = ?"
+        statement = "SELECT Id FROM \"Types\" WHERE Type = ?"
         cur.execute(statement, (type_name,))
         type_id = cur.fetchone()
         conn.commit()
@@ -327,6 +330,22 @@ for pokemon in pokemon_move_dict:
         move_power = move["power"]
         statement = "INSERT INTO Moves (MoveName, TypeId, Power) VALUES (?,?,?)"
         cur.execute(statement, (move_name, type_id[0], move_power,))
+        conn.commit()
+
+#Populating 'PokeMove' table
+for pokemon in pokemon_move_dict:
+    pokemon_moves_list = pokemon_move_dict[pokemon]
+    pokemon_id = pokemon_name_to_id[pokemon]
+    for move in pokemon_moves_list:
+        #first get moves id
+        move_name = move["name"]
+        statement = "SELECT Id FROM \"Moves\" WHERE MoveName = ?"
+        cur.execute(statement, (move_name,))
+        move_id = cur.fetchone()
+        conn.commit()
+        # insert into PokeMove table
+        statement = "INSERT INTO \"PokeMove\" (PokemonId, MoveId) VALUES (?,?)"
+        cur.execute(statement, (pokemon_id, move_id[0],))
         conn.commit()
 
 conn.close()
