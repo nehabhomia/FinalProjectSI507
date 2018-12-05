@@ -204,7 +204,6 @@ def get_types():
         types_list.append(row.text)
 
 get_types()
-#print(types_list)
 
 pokemon_name_type_dict = {}
 def get_pokemons_data():
@@ -216,18 +215,18 @@ def get_pokemons_data():
         pokemon_name_type_dict[pokemon_name] = pokemon_type
 get_pokemons_data()
 
-move_names = []
-def get_moves_data():
-    moves_page = requests.get(baseurl+'/List_of_moves').text
-    moves_soup = BeautifulSoup(moves_page, 'html.parser')
-    moves_table = moves_soup.find("div", {"id":"mw-content-text"})
-    tester = moves_table.find_all('td')
-    for row in tester:
-        if row.find('a') != None:
-            name = row.find('a').text
-            if len(name) != 1 and name != '':
-                move_names.append(name)
-get_moves_data()
+#move_names = []
+#def get_moves_data():
+#    moves_page = requests.get(baseurl+'/List_of_moves').text
+#    moves_soup = BeautifulSoup(moves_page, 'html.parser')
+#    moves_table = moves_soup.find("div", {"id":"mw-content-text"})
+#    tester = moves_table.find_all('td')
+#    for row in tester:
+#        if row.find('a') != None:
+#            name = row.find('a').text
+#            if len(name) != 1 and name != '':
+#                move_names.append(name)
+#get_moves_data()
 
 base_url = 'https://pokeapi.co/api/v2/pokemon/'
 
