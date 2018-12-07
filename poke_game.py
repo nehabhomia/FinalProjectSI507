@@ -18,6 +18,12 @@ class Trainer:
     input = trainer name, choice of region
     attributes = name, region
     '''
+    def __init__(self, name, region):
+        self.name = name
+        self.region = region
+    
+    def __str__(self):
+        return ('Welcome to {}, {}!'.format(self.region, self.name))
     
 class Pokemon:
     '''
@@ -25,6 +31,15 @@ class Pokemon:
     input = trainer's choice of region
     attributes = pokemon name, type, region, moves, health (base health of 1000)
     '''
+    def __init__(self, name, poke_type, region, moves):
+        self.name = name
+        self.type = poke_type
+        self.region = region
+        self.moves = moves
+        self.health = 1000
+    
+    def __str__(self):
+        return ('The Pokemon assigned to you is {}. It is a {} Pokemon from {}. It can play several moves like {}.'.format(self.name, self.type, self.region, self.moves))
 
 # =============================================================================
 # Functions
