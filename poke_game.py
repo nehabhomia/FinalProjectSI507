@@ -138,43 +138,90 @@ def health_progress_bar():
 
 #health_progress_bar()
 
-def pokemon_battle():
-    '''
-    This function will take in the two Pokemon instances and will create an
-    interactive prompt.
-    Each player will be asked to choose a move form a list of 10 moves that their
-    pokemon can make.
-    After both players have input their choice of move, the moves will be played.
-    This move MIGHT be displayed using progress bar, and each pokemon's progress
-    bar will decrease by the power of the move played by the opposing player.
-    As soon as one pokemon's progress bar/health score reaches zero, that pokemon
-    loses and the other player is declared as winner.
-    Game over.
-    '''
-    ### don't forget to code for the players to be able to quit the game at any
-    ### point of time.
+'''
+In this game section we will take in the two Players' inputs and create two
+pokemon instances using our game file and will create an interactive prompt.
+Each player will be asked to choose a move form a list of 10 moves that their
+pokemon can make.
+After both players have input their choice of move, the moves will be played.
+This move MIGHT be displayed using progress bar, and each pokemon's progress
+bar will decrease by the power of the move played by the opposing player.
+As soon as one pokemon's progress bar/health score reaches zero, that pokemon
+loses and the other player is declared as winner.
+Game over.
+'''
+
+if __name__ == "__main__":
+    regions = ['Kanto', 'Johto', 'Hoenn']
+    error_message = "\nInvalid input ¯\_(ツ)_/¯. Please Try Again.\n"
     
-    #get first trainer
-    trainer1 = get_trainer_input(1)
-    print("#############")
-    print(trainer1)
-    print("#############")
-    # get random pokemon for this trainer from selected region
+    user1_name = input("\nPlayer 1 Enter Name: ")
+    user1_region = input("Welcome, {}! Enter your choice of Region. You can choose a region from Kanto, Johto or Hoenn: ".format(user1_name))
+    while user1_region not in regions:
+        print (error_message)
+        user1_region = input("Welcome, {}! Enter your choice of Region. You can choose a region from Kanto, Johto or Hoenn: ".format(user1_name))
+    trainer1 = Trainer(user1_name, user1_region)
     pokemon_assigned1 = assign_pokemon(trainer1.region)
-    print()
-    print(pokemon_assigned1)
-    print()
-
-    # get second trainer
-    trainer2 = get_trainer_input(2)
-    print("#############")
-    print(trainer2)
-    print("#############")
-    # get random pokemon for this trainer from selected region
+    print('\n', pokemon_assigned1)
+    
+    user2_name = input("\nPlayer 2 Enter Name: ")
+    user2_region = input("Welcome, {}! Enter your choice of Region. You can choose a region from Kanto, Johto or Hoenn: ".format(user2_name))
+    while user2_region not in regions:
+        print (error_message)
+        user2_region = input("Welcome, {}! Enter your choice of Region. You can choose a region from Kanto, Johto or Hoenn: ".format(user2_name))
+    trainer2 = Trainer(user2_name, user2_region)
     pokemon_assigned2 = assign_pokemon(trainer2.region)
-    print()
-    print(pokemon_assigned2)
-
-#pokemon_battle()
-
-conn.close()
+    print('\n', pokemon_assigned2)
+    
+    print("\n" + '-'*15 + " Let the battle begin.. " + '-'*15 + "\n")
+    
+    currentPlayer1 = True
+    initial_statement = "Enter 'Quit' to exit the game at any time. Enter 'Help' for instructions.\n\n"
+    help_statement = """\nEnter 'List moves' to get a list of possible moves.\n
+    Enter 'Make move' followed by list index number (or chose a random number from 1-10) to make that move against the opposite Trainer's Pokemon.\n
+    Enter 'Surrender' to surrender the battle.\n"""
+    user_input = input(initial_statement)
+    while user_input != 'Quit':
+        if user_input == 'Help':
+            print (help_statement)
+            user_input = input(initial_statement)
+        elif user_input == 'List moves':
+            if currentPlayer1 == True:
+                print ("\n{}'s {}'s moves ".format(trainer1.name, pokemon_assigned1.name))
+            else:
+                print ("\n{}'s {}'s moves ".format(trainer2.name, pokemon_assigned2.name))
+            move_names = pokemon_assigned1.moves
+            move_power = pokemon_assigned1.power
+            for move in move_names:
+                print('\n', move_names.index(move) + 1, ' ', str(move))
+            user_input = input("\n'Make move' or " + initial_statement)
+        elif user_input == 'Make move':
+            if currentPlayer1 == True:
+                my_statement = ("Which of {}'s move do you want to make, {}? ".format(pokemon_assigned1.name, trainer1.name))
+            else:
+                my_statement = ("Which of {}'s move do you want to make, {}? ".format(pokemon_assigned2.name, trainer2.name))
+            move_number = input(my_statement)
+            moves_indices = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']
+            if move_number in moves_indices:
+                attack_power = move_power[int(move_number)-1]
+                if currentPlayer1 == True:
+                    currentPlayer1 = False
+                    print("\n{}'s turn.".format(trainer2.name))
+                else:
+                    currentPlayer1 = True
+                    print("\n{}'s turn.".format(trainer1.name))
+                user_input = input(initial_statement)
+            else:
+                print(error_message)
+                user_input = input("\n'Make move' or " + initial_statement)
+        elif user_input == 'Surrender':
+            if currentPlayer1 == True:
+                print ("\n{} has surrendered. {}'s {} wins!".format(trainer1.name, trainer2.name, pokemon_assigned2.name))
+            else:
+                print ("\n{} has surrendered. {}'s {} wins!".format(trainer2.name, trainer1.name, pokemon_assigned1.name))
+            break
+        else:
+            print (error_message)
+            user_input = input(initial_statement)
+            
+    print("\n" + '-'*20 + " Game Over " + '-'*20)
