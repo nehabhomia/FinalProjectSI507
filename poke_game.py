@@ -131,6 +131,8 @@ def health_progress_bar():
         time.sleep(0.5)
     player1Health.finish()
 
+#health_progress_bar()
+
 def pokemon_battle():
     '''
     This function will take in the two Pokemon instances and will create an
@@ -168,6 +170,6 @@ def pokemon_battle():
     print()
     print(pokemon_assigned2)
 
-pokemon_battle()
-
-conn.close()
+#pokemon_battle()
+#
+#conn.close()
