@@ -37,13 +37,14 @@ class Pokemon:
     input = trainer's choice of region
     attributes = pokemon name, type, region, moves, health (base health of 1000)
     '''
-    def __init__(self, name, poke_id, poke_type, region, moves):
+    def __init__(self, name, poke_id, poke_type, region, moves, power):
         self.name = name
         self.type = poke_type
         self.region = region
         self.moves = moves
         self.health = 1000
         self.id = poke_id
+        self.power = power
     
     def __str__(self):
         moves = self.moves[0] + ', ' + self.moves[1] + ', etc.'
@@ -93,17 +94,19 @@ def assign_pokemon(region):
     type_name = cur.fetchone()[0]
 
     # get all moves name for this pokemon
-    statement = """
-    SELECT MoveName FROM PokeMove JOIN Moves
-    ON PokeMove.MoveId = Moves.Id
-    WHERE PokeMove.PokemonId = ?
-    """
+    statement = """SELECT MoveName, Power FROM Moves
+JOIN PokeMove ON Moves.Id = PokeMove.MoveId
+JOIN Pokemons ON PokeMove.PokemonId = Pokemons.Id
+WHERE Pokemons.Id = ?
+        """
     cur.execute(statement, (pokemon_id,))
     pokemon_moves = cur.fetchall()
     pokemon_moves_list = []
+    pokemon_power_list = []
     for move in pokemon_moves:
         pokemon_moves_list.append(move[0])
-    pokemon_object = Pokemon(pokemon_name, pokemon_id, type_name, region, pokemon_moves_list)
+        pokemon_power_list.append(move[1])
+    pokemon_object = Pokemon(pokemon_name, pokemon_id, type_name, region, pokemon_moves_list, pokemon_power_list)
     return pokemon_object
 
 def health_progress_bar():
