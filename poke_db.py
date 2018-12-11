@@ -10,8 +10,6 @@ import sqlite3
 import requests
 from bs4 import BeautifulSoup
 import json
-import requests_cache
-requests_cache.install_cache('pokemon_cache')
 
 conn = sqlite3.connect('pokemon_database')
 cur = conn.cursor()
@@ -129,6 +127,19 @@ cur.execute(statement)
 conn.commit()
 
 # =============================================================================
+# Caching
+# =============================================================================
+
+CACHE_FNAME = 'poke_cache.json'
+try:
+    cache_file = open(CACHE_FNAME, 'r')
+    cache_contents = cache_file.read()
+    CACHE_DICTION = json.loads(cache_contents)
+    cache_file.close()
+except:
+    CACHE_DICTION = {}
+
+# =============================================================================
 # Scraping the data
 # =============================================================================
 
@@ -141,7 +152,16 @@ name_regions = []
 
 def get_regions_data():
     regions_extension = '/wiki/Category:Region_Starters'
-    main_regions_page = requests.get(baseurl+regions_extension).text
+    unique_ident = baseurl+regions_extension
+    if unique_ident in CACHE_DICTION:
+        main_regions_page = CACHE_DICTION[unique_ident]
+    else:
+        main_regions_page = requests.get(unique_ident).text
+        CACHE_DICTION[unique_ident] = main_regions_page
+        dumped_json_cache = json.dumps(CACHE_DICTION, indent = 1)
+        fw = open(CACHE_FNAME,"w")
+        fw.write(dumped_json_cache)
+        fw.close()
     main_regions_soup = BeautifulSoup(main_regions_page, 'html.parser')   
     regions_section = main_regions_soup.find_all("li", {"class": "category-page__trending-page"})
     for region in regions_section:
@@ -195,7 +215,16 @@ urls_list.extend(hoenn_urls)
 
 types_list = []
 def get_types():
-    types_page = requests.get(baseurl+'/Types').text
+    unique_ident = baseurl+'/Types'
+    if unique_ident in CACHE_DICTION:
+        types_page = CACHE_DICTION[unique_ident]
+    else:
+        types_page = requests.get(unique_ident).text
+        CACHE_DICTION[unique_ident] = types_page
+        dumped_json_cache = json.dumps(CACHE_DICTION, indent = 1)
+        fw = open(CACHE_FNAME,"w")
+        fw.write(dumped_json_cache)
+        fw.close()
     types_soup = BeautifulSoup(types_page, 'html.parser')
     if types_soup.find("table", {"class":"article-table"}).find_all("span", {"class":"t-type2"}) != None:
         all_types_list = types_soup.find("table", {"class":"article-table"}).find_all("span", {"class":"t-type2"})
@@ -208,7 +237,16 @@ get_types()
 pokemon_name_type_dict = {}
 def get_pokemons_data():
     for url in urls_list:
-        pokemon_page = requests.get(baseurl+url).text
+        unique_ident = baseurl+url
+        if unique_ident in CACHE_DICTION:
+            pokemon_page = CACHE_DICTION[unique_ident]
+        else:
+            pokemon_page = requests.get(unique_ident).text
+            CACHE_DICTION[unique_ident] = pokemon_page
+            dumped_json_cache = json.dumps(CACHE_DICTION, indent = 1)
+            fw = open(CACHE_FNAME,"w")
+            fw.write(dumped_json_cache)
+            fw.close()
         pokemon_soup = BeautifulSoup(pokemon_page, 'html.parser')
         pokemon_type = pokemon_soup.find("span", {"class":"t-type2"}).text
         pokemon_name = url.split('/')[-1]
@@ -236,7 +274,16 @@ def get_pokemon_moves():
     my_pokemons = [152, 155, 158, 1, 4, 7, 252, 255, 258]
     pokemon_moves = {}
     for pokemon in my_pokemons:
-        pokemon_page = requests.get(base_url+str(pokemon)+'/').text
+        unique_ident = base_url+str(pokemon)+'/'
+        if unique_ident in CACHE_DICTION:
+            pokemon_page = CACHE_DICTION[unique_ident]
+        else:
+            pokemon_page = requests.get(unique_ident).text
+            CACHE_DICTION[unique_ident] = json.loads(pokemon_page)
+            dumped_json_cache = json.dumps(CACHE_DICTION, indent = 1)
+            fw = open(CACHE_FNAME,"w")
+            fw.write(dumped_json_cache)
+            fw.close()
         pokemon_dict = json.loads(pokemon_page)
         pokemon_name = pokemon_dict['name']
         pokemon_name_to_id[pokemon_name] = pokemon
