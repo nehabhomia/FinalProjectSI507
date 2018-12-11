@@ -284,7 +284,7 @@ def get_pokemon_moves():
             fw = open(CACHE_FNAME,"w")
             fw.write(dumped_json_cache)
             fw.close()
-        pokemon_dict = json.loads(pokemon_page)
+        pokemon_dict = CACHE_DICTION[unique_ident]
         pokemon_name = pokemon_dict['name']
         pokemon_name_to_id[pokemon_name] = pokemon
         moves_list = []
