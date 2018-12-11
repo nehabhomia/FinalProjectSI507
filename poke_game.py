@@ -9,6 +9,10 @@ Created on Wed Dec  5 11:07:45 2018
 #from poke_db import *
 import progressbar
 import time
+import sqlite3
+
+conn = sqlite3.connect('pokemon_database')
+cur = conn.cursor()
 
 # =============================================================================
 # Classes
@@ -47,7 +51,7 @@ class Pokemon:
 # Functions
 # =============================================================================
 
-def get_trainer_input():
+def get_trainer_input(trainer_number):
     '''
     This function will take in players inputs (both player 1 and player 2) and
     create 2 instances of trainers from them.
@@ -55,7 +59,12 @@ def get_trainer_input():
     choice of region from 3 regions - Johto, Kanto and Hoenn
     Will return the region of choice.
     '''
-    pass
+    # Display help text to start the battle
+    help_statement = """Enter trainer%s name and choice of Pokemon region in space separated format <name> <region>\nYou can choose region from Kanto, Johto, Hoenn"""
+    user_resp = input(help_statement%trainer_number + ": ")
+    trainer1_input = user_resp.split(' ')
+    trainer1 = Trainer(trainer1_input[0], trainer1_input[1])
+    return trainer1
 
 def assign_pokemon(region):
     '''
@@ -63,7 +72,37 @@ def assign_pokemon(region):
     assign a pokemon to each player based on the region of their choice.
     Will return two instaces of the Pokemon class, assigned to each player.
     '''
-    pass
+    # get region id
+    statement = "SELECT Id FROM Regions WHERE Region = ?"
+    cur.execute(statement, (region,))
+    region_id = cur.fetchone()[0]
+
+    # get one Pokemon from this region_id randomly
+    statement = "SELECT * FROM Pokemons WHERE RegionId = ? ORDER BY RANDOM()"
+    cur.execute(statement, (region_id,))
+    pokemon = cur.fetchone()
+    pokemon_id = pokemon[0]
+    pokemon_name = pokemon[1]
+    type_id = pokemon[2]
+
+    # get type name for this Pokemon
+    statement = "SELECT Type FROM Types WHERE Id = ?"
+    cur.execute(statement, (type_id,))
+    type_name = cur.fetchone()[0]
+
+    # get all moves name for this pokemon
+    statement = """
+    SELECT MoveName FROM PokeMove JOIN Moves
+    ON PokeMove.MoveId = Moves.Id
+    WHERE PokeMove.PokemonId = ?
+    """
+    cur.execute(statement, (pokemon_id,))
+    pokemon_moves = cur.fetchall()
+    pokemon_moves_list = []
+    for move in pokemon_moves:
+        pokemon_moves_list.append(move[0])
+    pokemon_object = Pokemon(pokemon_name, type_name, region, pokemon_moves_list)
+    return pokemon_object
 
 def health_progress_bar():
     '''
@@ -92,7 +131,7 @@ def health_progress_bar():
         time.sleep(0.5)
     player1Health.finish()
 
-def pokemon_battle(pokemon):
+def pokemon_battle():
     '''
     This function will take in the two Pokemon instances and will create an
     interactive prompt.
@@ -107,4 +146,28 @@ def pokemon_battle(pokemon):
     '''
     ### don't forget to code for the players to be able to quit the game at any
     ### point of time.
-    pass
+    
+    #get first trainer
+    trainer1 = get_trainer_input(1)
+    print("#############")
+    print(trainer1)
+    print("#############")
+    # get random pokemon for this trainer from selected region
+    pokemon_assigned1 = assign_pokemon(trainer1.region)
+    print()
+    print(pokemon_assigned1)
+    print()
+
+    # get second trainer
+    trainer2 = get_trainer_input(2)
+    print("#############")
+    print(trainer2)
+    print("#############")
+    # get random pokemon for this trainer from selected region
+    pokemon_assigned2 = assign_pokemon(trainer2.region)
+    print()
+    print(pokemon_assigned2)
+
+pokemon_battle()
+
+conn.close()
