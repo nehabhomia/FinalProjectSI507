@@ -37,15 +37,17 @@ class Pokemon:
     input = trainer's choice of region
     attributes = pokemon name, type, region, moves, health (base health of 1000)
     '''
-    def __init__(self, name, poke_type, region, moves):
+    def __init__(self, name, poke_id, poke_type, region, moves):
         self.name = name
         self.type = poke_type
         self.region = region
         self.moves = moves
         self.health = 1000
+        self.id = poke_id
     
     def __str__(self):
-        return ('The Pokemon assigned to you is {}. It is a {} Pokemon from {}. It can play several moves like {}.'.format(self.name, self.type, self.region, self.moves))
+        moves = self.moves[0] + ', ' + self.moves[1] + ', etc.'
+        return ('The Pokemon assigned to you is {}. It is a {} Pokemon from {}. It can play several moves like {}.'.format(self.name, self.type, self.region, moves))
 
 # =============================================================================
 # Functions
@@ -60,7 +62,7 @@ def get_trainer_input(trainer_number):
     Will return the region of choice.
     '''
     # Display help text to start the battle
-    help_statement = """Enter trainer%s name and choice of Pokemon region in space separated format <name> <region>\nYou can choose region from Kanto, Johto, Hoenn"""
+    help_statement = """Enter trainer%s name and choice of Pokemon region in space separated format <name> <region>\nYou can choose a region from Kanto, Johto, Hoenn"""
     user_resp = input(help_statement%trainer_number + ": ")
     trainer1_input = user_resp.split(' ')
     trainer1 = Trainer(trainer1_input[0], trainer1_input[1])
@@ -101,7 +103,7 @@ def assign_pokemon(region):
     pokemon_moves_list = []
     for move in pokemon_moves:
         pokemon_moves_list.append(move[0])
-    pokemon_object = Pokemon(pokemon_name, type_name, region, pokemon_moves_list)
+    pokemon_object = Pokemon(pokemon_name, pokemon_id, type_name, region, pokemon_moves_list)
     return pokemon_object
 
 def health_progress_bar():
@@ -171,5 +173,5 @@ def pokemon_battle():
     print(pokemon_assigned2)
 
 #pokemon_battle()
-#
-#conn.close()
+
+conn.close()
