@@ -8,6 +8,8 @@ Created on Mon Dec 10 23:35:10 2018
 
 import unittest
 import poke_game as game
+import poke_db as database
+import sqlite3
 
 class TestTrainer(unittest.TestCase):
 
@@ -45,5 +47,30 @@ class TestPokemon(unittest.TestCase):
         self.assertEqual(pokemon2.region, 'Johto')
         self.assertEqual(pokemon2.moves, 'Ice-Punch')
         self.assertEqual(pokemon2.__str__(), 'The Pokemon assigned to you is Totodile. It is a Water Pokemon from Johto. It can play several moves like Ice-Punch.')
+        
+class TestDatabase(unittest.TestCase):
+    
+    def testScraping(self):
+        pass
+    
+    def testApi(self):
+        pass
+    
+    def testTableCreation(self):
+        conn = sqlite3.connect('pokemon_database')
+        cur = conn.cursor()
+        conn.close()
+        pass
+    
+    def testTablePopulation(self):
+        conn = sqlite3.connect('pokemon_database')
+        cur = conn.cursor()
+        conn.close()
+        pass
+
+class TestBattle(unittest.TestCase):
+    
+    def testRandomAssignment(self):
+        pass
 
 unittest.main()
