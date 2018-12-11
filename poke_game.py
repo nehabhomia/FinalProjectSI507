@@ -6,7 +6,9 @@ Created on Wed Dec  5 11:07:45 2018
 @author: nehabhomia
 """
 
-from poke_db import *
+#from poke_db import *
+import progressbar
+import time
 
 # =============================================================================
 # Classes
@@ -71,7 +73,24 @@ def health_progress_bar():
     '''
     ### https://github.com/WoLpH/python-progressbar
     ### https://progressbar-2.readthedocs.io/en/latest/progressbar.widgets.html#progressbar.widgets.ReverseBar
-    pass
+    widgets = [
+        progressbar.AnimatedMarker(),
+        progressbar.DynamicMessage('health'),
+        progressbar.AnimatedMarker(),
+        " ",
+        progressbar.ReverseBar(' ',fill= "#", left="[", right = "]")
+    ]
+    player1Health = progressbar.ProgressBar(widgets=widgets, min_value=0, max_value=1000, prefix="player1 ").start()
+    max_health = 1000
+    current_health = max_health
+    # let us assume player 1 got these power shots on him, total = 1000
+    power = [50, 100, 200, 50, 300, 25, 50, 25, 100, 100]
+    for i in range(10):
+        current_health = current_health - power[i]
+        show_health = max_health - current_health
+        player1Health.update(show_health, health = current_health)
+        time.sleep(0.5)
+    player1Health.finish()
 
 def pokemon_battle(pokemon):
     '''
