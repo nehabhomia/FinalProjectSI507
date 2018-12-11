@@ -273,20 +273,23 @@ for name in name_regions:
 #Populating 'Pokemons' Table
 for name in johto_names:
     Id = 2
-    statement = "INSERT INTO \"Pokemons\" (Pokemon, RegionId) VALUES (?, ?)"
-    cur.execute(statement, (name, Id))
+    pokemon_id = pokemon_name_to_id[name.lower()]
+    statement = "INSERT INTO \"Pokemons\" (Id, Pokemon, RegionId) VALUES (?, ?, ?)"
+    cur.execute(statement, (pokemon_id, name, Id))
     conn.commit()
 
 for name in kanto_names:
     Id = 4
-    statement = "INSERT INTO \"Pokemons\" (Pokemon, RegionId) VALUES (?, ?)"
-    cur.execute(statement, (name, Id))
+    pokemon_id = pokemon_name_to_id[name.lower()]
+    statement = "INSERT INTO \"Pokemons\" (Id, Pokemon, RegionId) VALUES (?, ?, ?)"
+    cur.execute(statement, (pokemon_id, name, Id))
     conn.commit()
 
 for name in hoenn_names:
     Id = 6
-    statement = "INSERT INTO \"Pokemons\" (Pokemon, RegionId) VALUES (?, ?)"
-    cur.execute(statement, (name, Id))
+    pokemon_id = pokemon_name_to_id[name.lower()]
+    statement = "INSERT INTO \"Pokemons\" (Id, Pokemon, RegionId) VALUES (?, ?, ?)"
+    cur.execute(statement, (pokemon_id, name, Id))
     conn.commit()
 
 #Populating 'Types' Table
