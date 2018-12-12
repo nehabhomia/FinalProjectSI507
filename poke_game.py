@@ -42,7 +42,7 @@ class Pokemon:
         self.type = poke_type
         self.region = region
         self.moves = moves
-        self.health = 1000
+        self.health = 250
         self.id = poke_id
         self.power = power
     
@@ -175,6 +175,26 @@ if __name__ == "__main__":
     
     print("\n" + '-'*15 + " Let the battle begin.. " + '-'*15 + "\n")
     
+    widgets1 = [
+        progressbar.AnimatedMarker(),
+        progressbar.DynamicMessage('health'),
+        progressbar.AnimatedMarker(),
+        " ",
+        progressbar.ReverseBar(' ',fill= ":", left="[", right = "] 250")
+    ]
+    
+    widgets2 = [
+        progressbar.AnimatedMarker(),
+        progressbar.DynamicMessage('health'),
+        progressbar.AnimatedMarker(),
+        " ",
+        progressbar.ReverseBar(' ',fill= ":", left="[", right = "] 250")
+    ]
+    
+    player2Health = progressbar.ProgressBar(widgets=widgets2, min_value=0, max_value=250, prefix=pokemon_assigned2.name)
+    player1Health = progressbar.ProgressBar(widgets=widgets1, min_value=0, max_value=250, prefix=pokemon_assigned1.name)
+    max_health = 250
+    
     currentPlayer1 = True
     initial_statement = "Enter 'Quit' to exit the game at any time. Enter 'Help' for instructions.\n\n"
     help_statement = """\nEnter 'List moves' to get a list of possible moves.\n
@@ -188,28 +208,46 @@ if __name__ == "__main__":
         elif user_input == 'List moves':
             if currentPlayer1 == True:
                 print ("\n{}'s {}'s moves ".format(trainer1.name, pokemon_assigned1.name))
+                move_names = pokemon_assigned1.moves
             else:
                 print ("\n{}'s {}'s moves ".format(trainer2.name, pokemon_assigned2.name))
-            move_names = pokemon_assigned1.moves
-            move_power = pokemon_assigned1.power
+                move_names = pokemon_assigned2.moves
             for move in move_names:
                 print('\n', move_names.index(move) + 1, ' ', str(move))
             user_input = input("\n'Make move' or " + initial_statement)
         elif user_input == 'Make move':
             if currentPlayer1 == True:
                 my_statement = ("Which of {}'s move do you want to make, {}? ".format(pokemon_assigned1.name, trainer1.name))
+                move_power = pokemon_assigned1.power
             else:
                 my_statement = ("Which of {}'s move do you want to make, {}? ".format(pokemon_assigned2.name, trainer2.name))
+                move_power = pokemon_assigned2.power
             move_number = input(my_statement)
             moves_indices = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']
             if move_number in moves_indices:
                 attack_power = move_power[int(move_number)-1]
                 if currentPlayer1 == True:
+                    pokemon_assigned2.health = pokemon_assigned2.health - attack_power
+                    show_health2 = max_health - pokemon_assigned2.health
+                    if pokemon_assigned2.health <= 0:
+                        show_health2 = max_health
+                        player2Health.update(show_health2, health = 0)
+                        print('\n{} wins!'.format(trainer1.name))
+                        break
+                    player2Health.update(show_health2, health = pokemon_assigned2.health)
                     currentPlayer1 = False
-                    print("\n{}'s turn.".format(trainer2.name))
+                    print("\n\n{}'s turn.".format(trainer2.name))
                 else:
+                    pokemon_assigned1.health = pokemon_assigned1.health - attack_power
+                    show_health1 = max_health - pokemon_assigned1.health
+                    if pokemon_assigned1.health <= 0:
+                        show_health1 = max_health
+                        player1Health.update(show_health1, health = 0)
+                        print ('\n{} wins!'.format(trainer2.name))
+                        break
+                    player1Health.update(show_health1, health = pokemon_assigned1.health)
                     currentPlayer1 = True
-                    print("\n{}'s turn.".format(trainer1.name))
+                    print("\n\n{}'s turn.".format(trainer1.name))
                 user_input = input(initial_statement)
             else:
                 print(error_message)
