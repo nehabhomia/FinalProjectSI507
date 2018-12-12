@@ -8,7 +8,6 @@ Created on Mon Dec 10 23:35:10 2018
 
 import unittest
 import poke_game as game
-#import poke_db as database
 import sqlite3
 
 class TestTrainer(unittest.TestCase):
@@ -33,8 +32,8 @@ class TestTrainer(unittest.TestCase):
 class TestPokemon(unittest.TestCase):
     
     def testConstructor(self):
-        pokemon1 = game.Pokemon('Bulbasaur', 'Grass', 'Kanto', ['Solar Beam', 'Whip', 'Slash'])
-        pokemon2 = game.Pokemon('Totodile', 'Water', 'Johto', ['Ice-Punch', 'Swords Dance', 'Cut'])
+        pokemon1 = game.Pokemon('Bulbasaur', '4', 'Grass', 'Kanto', ['Solar Beam', 'Whip', 'Slash'], ['1', '2', '3'])
+        pokemon2 = game.Pokemon('Totodile', '6', 'Water', 'Johto', ['Ice-Punch', 'Swords Dance', 'Cut'], ['1', '2', '3'])
         
         self.assertEqual(pokemon1.name, 'Bulbasaur')
         self.assertEqual(pokemon1.type, 'Grass')
@@ -49,12 +48,6 @@ class TestPokemon(unittest.TestCase):
         self.assertEqual(pokemon2.__str__(), 'The Pokemon assigned to you is Totodile. It is a Water Pokemon from Johto. It can play several moves like Ice-Punch, Swords Dance, etc..')
         
 class TestDatabase(unittest.TestCase):
-    
-    def testScraping(self):
-        pass
-    
-    def testApi(self):
-        pass
     
     def testTableCreation(self):
         conn = sqlite3.connect('pokemon_database')
@@ -94,9 +87,13 @@ class TestDatabase(unittest.TestCase):
         conn.close()
         pass
 
-#class TestBattle(unittest.TestCase):
-#    
-#    def testRandomAssignment(self):
-#        pass
+class TestBattle(unittest.TestCase):
+    
+    def testRandomAssignment(self):
+        pokemon1 = game.assign_pokemon('Kanto')
+        pokemon2 = game.assign_pokemon('Hoenn')
+        
+        self.assertEqual(pokemon1.region, 'Kanto')
+        self.assertEqual(pokemon2.region, 'Hoenn')
 
 unittest.main()
