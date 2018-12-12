@@ -102,3 +102,11 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+#project specific
+pokemon_database
+pokemon_cache.sqlite
+.DS_Store
+poke_flask/
+poke_cache.json
+
